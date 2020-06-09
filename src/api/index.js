@@ -45,8 +45,8 @@ axiosInstance.interceptors.request.use(config => {
  * response interceptor
  */
 axiosInstance.interceptors.response.use(
-    response => response.data,
-    error => Promise.reject(error)
+    // response => response.data,
+    // error => Promise.reject(error)
 )
 
 const http = {

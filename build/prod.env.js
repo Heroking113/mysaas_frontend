@@ -30,12 +30,13 @@ const NODE_ENV = JSON.stringify('production')
 //     APP_CODE: JSON.stringify('herokingfsaas')
 // }
 
-// 这部分配置保持不动
 export default {
     NODE_ENV: NODE_ENV,
-    LOCAL_DEV_URL: JSON.stringify('http://localhost'),
-    LOCAL_DEV_PORT: JSON.stringify('8080'),
-    AJAX_URL_PREFIX: JSON.stringify(''),
+    LOCAL_DEV_URL: JSON.stringify('https://paas-class.bktencent.com/o/herokingfsaas'),
+    LOCAL_DEV_PORT: JSON.stringify('443'),
+    AJAX_URL_PREFIX: JSON.stringify('/o/herokingfsaas'),
     AJAX_MOCK_PARAM: JSON.stringify('mock-file'),
-    USER_INFO_URL: JSON.stringify('account/get_user_info/')
+    USER_INFO_URL: JSON.stringify('account/get_user_info/'),
+    // APP_CODE
+    APP_CODE: JSON.stringify('herokingfsaas')
 }

@@ -55,6 +55,7 @@
   "dependencies": {
     "@tencent/bk-magic-vue": "latest",
     "axios": "~0.18.0",
+    "bk-magic-vue": "^2.1.17-beta.1",
     "cookie": "~0.4.0",
     "element-ui": "^2.13.2",
     "jquery": "^3.5.1",

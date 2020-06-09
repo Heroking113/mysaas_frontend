@@ -17,6 +17,7 @@
           <el-select
             id="cur_business"
             v-model="bk_biz_id"
+            style="width: 160px"
             placeholder="请选择"
             ref="select_business"
             @change="get_select_business_label"
@@ -36,7 +37,6 @@
             style="width: 280px"
             placeholder="请选择"
             ref="select_script"
-            @change="get_select_script_label"
           >
             <el-option
               v-for="item in baseScriptData"
@@ -61,12 +61,12 @@
         ref="multipleTable"
         :data="tableData"
         tooltip-effect="dark"
-        style="width: 68%"
+        style="width: 100%"
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" width="55"></el-table-column>
-        <el-table-column prop="host.bk_host_innerip" label="IP" width="250"></el-table-column>
-        <el-table-column prop="host.bk_os_name" label="操作系统" width="250"></el-table-column>
+        <el-table-column prop="bk_host_innerip" label="IP" width="250"></el-table-column>
+        <el-table-column prop="bk_os_name" label="操作系统" width="250"></el-table-column>
         <el-table-column fixed="right" label="操作" width="100">
           <template slot-scope="scope">
             <el-button
@@ -94,15 +94,19 @@ export default {
       baseScriptData: [],
       content: "",
       selected_bk_biz_id: "",
-      selected_script: "",
       hostIps: new Array()
     };
   },
   created() {
     this.$http.get("/query_all_info/").then(resp => {
-      this.tableData = resp.data.host_data;
-      this.baseBusinessData = resp.data.business_data;
-      this.baseScriptData = resp.data.script_data;
+      if (resp.status === 200) {
+        let json_data = JSON.parse(JSON.stringify(resp.data))
+        this.tableData = json_data.host_data;
+        this.baseBusinessData = json_data.business_data;
+        this.baseScriptData = json_data.script_data;
+      } else {
+        this.$message.error("获取信息失败！");
+      }
     });
   },
   mounted() {
@@ -111,23 +115,22 @@ export default {
     });
   },
   methods: {
+    /**
+     * 提交脚本执行
+     */
     onSubmit() {
-      /*
-      提交脚本执行
-      */
-      let params = {}; // new FormData();
+      let params = {};
       // 判断是否有选择业务
       if (this.selected_bk_biz_id !== "") {
         params["bk_biz_id"] = this.selected_bk_biz_id;
-        // params.append("bk_biz_id", this.selected_bk_biz_id);
       } else {
         this.$message.warning("请选择业务");
         return;
       }
       // 判断是否有选择脚本
-      if (this.selected_script !== "") {
-        params["script"] = this.selected_script;
-        // params.append("script", this.selected_script);
+      const selected_script = $("#cur_script").val();
+      if (selected_script !== "") {
+        params["script"] = selected_script;
       } else {
         this.$message.warning("请选择脚本");
         return;
@@ -139,16 +142,15 @@ export default {
           temp_host_ips.push(item);
         });
         params["host_ips"] = temp_host_ips.join(",");
-        // params.append("host_ips", temp_host_ips);
       } else {
         this.$message.warning("请至少选择一台主机");
         return;
       }
       this.$http.post("/execute_script/", qs.stringify(params)).then(resp => {
-        if (resp.result) {
-          this.$message.success("执行成功!")
+        if (resp.data.condition) {
+          this.$message.success("执行成功!");
         } else {
-          this.$message.error("执行失败!")
+          this.$message.error("执行失败!");
         }
       });
     },
@@ -156,9 +158,12 @@ export default {
      * 跳转到“任务记录”界面
      */
     goRecord() {
-      this.$router.push({ path: "/task-record" });
+      this.$router.push({
+        path: window.PROJECT_CONFIG.SITE_URL + "task-record"
+      });
     },
     /**
+     * 获取select标签中选中的label值
      * 将选中的根据业务筛选主机并展示
      */
     get_select_business_label(val) {
@@ -166,17 +171,18 @@ export default {
 
       let params = new FormData();
       params.append("bk_biz_id", this.selected_bk_biz_id);
-      this.$http.post("/query_host_info/", params).then(resp => {
-        if (resp.result) {
-          this.tableData = resp.data.host_data;
+      const QUERY_HOST_INFO_URL = "/query_host_info/?bk_biz_id=" + this.selected_bk_biz_id
+      this.$http.get(QUERY_HOST_INFO_URL).then(resp => {
+        if (resp.status === 200) {
+          let json_data = JSON.parse(JSON.stringify(resp.data.host_data.data.info))
+          this.tableData = []
+          json_data.forEach(item => {
+            this.tableData.push(item["host"])
+          })
+        } else {
+          this.$message.error("获取当前业务下的主机信息失败！")
         }
       });
-    },
-    /**
-     * 获取选中的脚本命令
-     */
-    get_select_script_label(val) {
-      this.selected_script = val;
     },
     /**
      * 存储选中的主机Ip
@@ -184,7 +190,7 @@ export default {
     handleSelectionChange(hosts) {
       this.hostIps.splice(0, this.hostIps.length);
       for (let item in hosts) {
-        this.hostIps.push(hosts[item]["host"]["bk_host_innerip"]);
+        this.hostIps.push(hosts[item]["bk_host_innerip"]);
       }
     }
   }
@@ -213,8 +219,8 @@ export default {
 
 .table-style {
   position: relative;
-  width: 1000px;
-  top: 200px;
+  width: 700px;
+  top: 100px;
   left: 50%;
   transform: translate(-50%, 0);
 }
